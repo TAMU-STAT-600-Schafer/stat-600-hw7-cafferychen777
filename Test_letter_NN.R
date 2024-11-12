@@ -95,9 +95,14 @@ for(i in seq_along(parameter_combinations)) {
                      seed = 12345)
   
   # Plot training and validation errors
-  plot(1:length(out_new$error), out_new$error, ylim = c(0, 70), type = 'l',
+  plot(1:length(out_new$error), out_new$error, 
+       ylim = c(0, 70), 
+       type = 'l',
        main = paste("Training vs Validation Error - Combination", i),
-       xlab = "Epoch", ylab = "Error Rate (%)", col = "blue")
+       xlab = "Epoch", 
+       ylab = "Error Rate (%)", 
+       col = "blue",
+       lwd = 2)  # Increased line width for better visibility
   lines(1:length(out_new$error_val), out_new$error_val, col = "red")
   legend("topright", legend = c("Training", "Validation"),
          col = c("blue", "red"), lty = 1)
