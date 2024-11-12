@@ -44,11 +44,18 @@ plot(out$error_train, type = 'o', main = "Training Error - LR",
 plot(out$error_test, type = 'o', main = "Test Error - LR",
      xlab = "Iteration", ylab = "Error Rate (%)")
 
-# Default neural network parameters
+# Neural Network Configuration
+# --------------------------
+# Default parameters for initial testing
 cat("\nDefault NN parameters results:\n")
-out2 = NN_train(Xtrain, Ytrain, Xval, Yval, lambda = 0.001,
-                rate = 0.1, mbatch = 50, nEpoch = 150,
-                hidden_p = 100, scale = 1e-3, seed = 12345)
+out2 = NN_train(Xtrain, Ytrain, Xval, Yval, 
+                lambda = 0.001,    # L2 regularization strength
+                rate = 0.1,        # Learning rate
+                mbatch = 50,       # Mini-batch size
+                nEpoch = 150,      # Number of training epochs
+                hidden_p = 100,    # Hidden layer size
+                scale = 1e-3,      # Weight initialization scale
+                seed = 12345)      # Random seed for reproducibility
 
 # Plot training and validation errors
 plot(1:length(out2$error), out2$error, ylim = c(0, 70), type = 'l',
