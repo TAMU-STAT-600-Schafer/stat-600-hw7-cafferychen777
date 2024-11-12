@@ -6,12 +6,14 @@ letter_train <- read.table("Data/letter-train.txt", header = F, colClasses = "nu
 Y <- letter_train[, 1]  # Extract labels
 X <- as.matrix(letter_train[, -1])  # Extract features
 
-# Update training to set last part as validation
+# Dataset Splitting
+# ----------------
+# Reserve last 200 samples for validation
 id_val = 1801:2000
-Yval = Y[id_val]
-Xval = X[id_val, ]
-Ytrain = Y[-id_val]
-Xtrain = X[-id_val, ]
+Yval = Y[id_val]     # Validation labels
+Xval = X[id_val, ]   # Validation features
+Ytrain = Y[-id_val]  # Training labels
+Xtrain = X[-id_val,] # Training features
 
 # Testing data
 letter_test <- read.table("Data/letter-test.txt", header = F, colClasses = "numeric")
