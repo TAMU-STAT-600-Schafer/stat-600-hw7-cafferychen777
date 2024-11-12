@@ -1,9 +1,10 @@
-# Load the data
-
-# Training data
+# Data Loading and Preprocessing
+# -----------------------------
+# Load training data from letter-train.txt
+# Format: First column is label (0-25 for A-Z), remaining columns are features
 letter_train <- read.table("Data/letter-train.txt", header = F, colClasses = "numeric")
-Y <- letter_train[, 1]
-X <- as.matrix(letter_train[, -1])
+Y <- letter_train[, 1]  # Extract labels
+X <- as.matrix(letter_train[, -1])  # Extract features
 
 # Update training to set last part as validation
 id_val = 1801:2000
