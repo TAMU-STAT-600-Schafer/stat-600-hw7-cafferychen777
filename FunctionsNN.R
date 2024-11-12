@@ -90,7 +90,8 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda) {
   #   lambda: Regularization strength
   
   # Forward pass
-  # Step 1: Input to hidden layer
+  # ------------
+  # Step 1: Input to hidden layer with ReLU activation
   hidden = X %*% W1
   hidden = sweep(hidden, 2, b1, "+")
   hidden_relu = matrix(pmax(0, hidden), nrow = nrow(hidden))
