@@ -149,12 +149,15 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda) {
 # W2 - a h by K matrix of weights
 # b2 - a vector of size K of intercepts
 evaluate_error <- function(Xval, yval, W1, b1, W2, b2) {
-  # Forward pass
+  # Forward pass through the network
+  # -------------------------------
+  
+  # First layer
   hidden = Xval %*% W1
   hidden = sweep(hidden, 2, b1, "+")
   hidden_relu = matrix(pmax(0, hidden), nrow = nrow(hidden))
   
-  # Output layer
+  # Second layer
   scores = hidden_relu %*% W2
   scores = sweep(scores, 2, b2, "+")
   
