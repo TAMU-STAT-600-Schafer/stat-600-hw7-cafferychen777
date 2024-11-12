@@ -123,12 +123,14 @@ cat("\nBest parameters found:\n")
 print(best_params)
 cat("Best test error achieved:", best_test_error, "%\n")
 
-# Final optimized model with best parameters
+# Final Model Training
+# ------------------
+# Train final model with best parameters and increased epochs
 final_model = NN_train(Xtrain, Ytrain, Xval, Yval,
                        lambda = best_params$lambda,
                        rate = best_params$rate,
                        mbatch = best_params$mbatch,
-                       nEpoch = 200,  # Increase epochs for final model
+                       nEpoch = 200,  # Extended training for better convergence
                        hidden_p = best_params$hidden_p,
                        scale = 1e-3,
                        seed = 12345)
