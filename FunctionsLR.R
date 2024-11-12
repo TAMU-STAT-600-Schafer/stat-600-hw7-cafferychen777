@@ -16,37 +16,111 @@
 # error_train - (numIter + 1) length vector of training error % at each iteration (+ starting value)
 # error_test - (numIter + 1) length vector of testing error % at each iteration (+ starting value)
 # objective - (numIter + 1) length vector of objective values of the function that we are minimizing at each iteration (+ starting value)
-LRMultiClass <- function(X, y, Xt, yt, numIter = 50, eta = 0.1, lambda = 1, beta_init = NULL){
-  ## Check the supplied parameters as described. You can assume that X, Xt are matrices; y, yt are vectors; and numIter, eta, lambda are scalars. You can assume that beta_init is either NULL (default) or a matrix.
-  ###################################
-  # Check that the first column of X and Xt are 1s, if not - display appropriate message and stop execution.
+LRMultiClass <- function(X, y, Xt, yt, numIter = 50, eta = 0.1, lambda = 1, beta_init = NULL) {
+  # Get dimensions
+  n = nrow(X)
+  p = ncol(X)
+  K = length(unique(y))
   
-  # Check for compatibility of dimensions between X and Y
+  # Check first column is all 1s
+  if (!all(X[,1] == 1) || !all(Xt[,1] == 1)) {
+    stop("First column of X and Xt must be all 1s")
+  }
   
-  # Check for compatibility of dimensions between Xt and Yt
+  # Check dimensions
+  if (length(y) != n) {
+    stop("Incompatible dimensions between X and y")
+  }
+  if (length(yt) != nrow(Xt)) {
+    stop("Incompatible dimensions between Xt and yt")
+  }
+  if (ncol(X) != ncol(Xt)) {
+    stop("Incompatible dimensions between X and Xt")
+  }
   
-  # Check for compatibility of dimensions between X and Xt
+  # Check parameters
+  if (eta <= 0) {
+    stop("Learning rate eta must be positive")
+  }
+  if (lambda < 0) {
+    stop("Ridge parameter lambda must be non-negative")
+  }
   
-  # Check eta is positive
+  # Initialize beta
+  if (is.null(beta_init)) {
+    beta = matrix(0, nrow = p, ncol = K)
+  } else {
+    if (nrow(beta_init) != p || ncol(beta_init) != K) {
+      stop("Incompatible dimensions for beta_init")
+    }
+    beta = beta_init
+  }
   
-  # Check lambda is non-negative
+  # Initialize storage for errors and objective values
+  error_train = numeric(numIter + 1)
+  error_test = numeric(numIter + 1)
+  objective = numeric(numIter + 1)
   
-  # Check whether beta_init is NULL. If NULL, initialize beta with p x K matrix of zeroes. If not NULL, check for compatibility of dimensions with what has been already supplied.
+  # Helper function to compute probabilities
+  compute_probs = function(X, beta) {
+    scores = X %*% beta
+    scores = scores - apply(scores, 1, max) # For numerical stability
+    exp_scores = exp(scores)
+    probs = exp_scores / rowSums(exp_scores)
+    return(probs)
+  }
   
-  ## Calculate corresponding pk, objective value f(beta_init), training error and testing error given the starting point beta_init
-  ##########################################################################
+  # Helper function to compute objective value
+  compute_objective = function(X, y, beta, lambda) {
+    probs = compute_probs(X, beta)
+    n = nrow(X)
+    # Negative log likelihood
+    nll = -mean(log(probs[cbind(1:n, y + 1)]))
+    # Ridge penalty
+    ridge = (lambda/2) * sum(beta^2)
+    return(nll + ridge)
+  }
   
-  ## Newton's method cycle - implement the update EXACTLY numIter iterations
-  ##########################################################################
- 
-  # Within one iteration: perform the update, calculate updated objective function and training/testing errors in %
+  # Helper function to compute error rate
+  compute_error = function(X, y, beta) {
+    probs = compute_probs(X, beta)
+    predictions = max.col(probs) - 1
+    return(mean(predictions != y) * 100)
+  }
   
+  # Initial errors and objective
+  error_train[1] = compute_error(X, y, beta)
+  error_test[1] = compute_error(Xt, yt, beta)
+  objective[1] = compute_objective(X, y, beta, lambda)
   
-  ## Return output
-  ##########################################################################
-  # beta - p x K matrix of estimated beta values after numIter iterations
-  # error_train - (numIter + 1) length vector of training error % at each iteration (+ starting value)
-  # error_test - (numIter + 1) length vector of testing error % at each iteration (+ starting value)
-  # objective - (numIter + 1) length vector of objective values of the function that we are minimizing at each iteration (+ starting value)
-  return(list(beta = beta, error_train = error_train, error_test = error_test, objective =  objective))
+  # Gradient descent iterations
+  for (iter in 1:numIter) {
+    # Compute probabilities
+    probs = compute_probs(X, beta)
+    
+    # Compute gradient
+    grad = matrix(0, nrow = p, ncol = K)
+    for (k in 0:(K-1)) {
+      indicator = (y == k)
+      grad[,k+1] = -colMeans(X * (indicator - probs[,k+1]))
+    }
+    
+    # Add ridge penalty gradient
+    grad = grad + lambda * beta
+    
+    # Update beta
+    beta = beta - eta * grad
+    
+    # Store errors and objective
+    error_train[iter + 1] = compute_error(X, y, beta)
+    error_test[iter + 1] = compute_error(Xt, yt, beta)
+    objective[iter + 1] = compute_objective(X, y, beta, lambda)
+  }
+  
+  return(list(
+    beta = beta,
+    error_train = error_train,
+    error_test = error_test,
+    objective = objective
+  ))
 }
