@@ -81,6 +81,14 @@ loss_grad_scores <- function(y, scores, K){
 # b2 - a vector of size K of intercepts
 # lambda - a non-negative scalar, ridge parameter for gradient calculations
 one_pass <- function(X, y, K, W1, b1, W2, b2, lambda) {
+  # Parameters:
+  #   X: Input data matrix (n_samples x n_features)
+  #   y: Target labels (0-based indexing)
+  #   K: Number of classes
+  #   W1, b1: First layer weights and biases
+  #   W2, b2: Second layer weights and biases
+  #   lambda: Regularization strength
+  
   # Forward pass
   # Step 1: Input to hidden layer
   hidden = X %*% W1
