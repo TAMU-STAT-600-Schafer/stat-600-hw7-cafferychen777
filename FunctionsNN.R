@@ -161,7 +161,7 @@ evaluate_error <- function(Xval, yval, W1, b1, W2, b2) {
   scores = hidden_relu %*% W2
   scores = sweep(scores, 2, b2, "+")
   
-  # Compute predictions
+  # Efficient matrix operations for large-scale data
   predictions = max.col(scores) - 1
   error = mean(predictions != yval) * 100
   
