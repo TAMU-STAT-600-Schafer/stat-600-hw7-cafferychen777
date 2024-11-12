@@ -24,11 +24,19 @@ Xt <- as.matrix(letter_test[, -1])
 source("FunctionsNN.R")
 source("FunctionsLR.R")
 
-# First run logistic regression as baseline
+# Baseline Model: Logistic Regression
+# ---------------------------------
+# Add intercept term to feature matrices
 Xinter <- cbind(rep(1, nrow(Xtrain)), Xtrain)
 Xtinter <- cbind(rep(1, nrow(Xt)), Xt)
 
-out <- LRMultiClass(Xinter, Ytrain, Xtinter, Yt, lambda = 1, numIter = 150, eta = 0.1)
+# Train logistic regression model
+out <- LRMultiClass(Xinter, Ytrain, Xtinter, Yt, 
+                    lambda = 1,    # Regularization parameter
+                    numIter = 150, # Number of iterations
+                    eta = 0.1)     # Learning rate
+
+# Plot training and validation errors
 plot(out$objective, type = 'o', main = "Objective Function - LR", 
      xlab = "Iteration", ylab = "Objective Value")
 plot(out$error_train, type = 'o', main = "Training Error - LR",
