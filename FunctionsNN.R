@@ -1,10 +1,16 @@
-# Initialization
+# Neural Network Implementation for Multi-class Classification
 #####################################################
-# p - dimension of input layer
-# hidden_p - dimension of hidden layer
-# K - number of classes, dimension of output layer
-# scale - magnitude for initialization of W_k (standard deviation of normal)
-# seed - specified seed to use before random normal draws
+# This file implements a two-layer neural network with ReLU activation
+# for multi-class classification problems.
+
+# Initialize weights and biases for neural network
+#####################################################
+# Parameters:
+# p - dimension of input layer (number of features)
+# hidden_p - dimension of hidden layer (number of neurons)
+# K - number of classes in output layer
+# scale - magnitude for initialization of weights (standard deviation of normal distribution)
+# seed - random seed for reproducibility
 initialize_bw <- function(p, hidden_p, K, scale = 1e-3, seed = 12345){
   cat("\nStarting initialize_bw function\n")
   cat("Parameters:\n")
@@ -41,12 +47,16 @@ initialize_bw <- function(p, hidden_p, K, scale = 1e-3, seed = 12345){
   return(list(b1 = b1, b2 = b2, W1 = W1, W2 = W2))
 }
 
-# Function to calculate loss, error, and gradient strictly based on scores
-# with lambda = 0
+# Calculate loss, error, and gradient based on scores
 #############################################################
-# scores - a matrix of size n by K of scores (output layer)
-# y - a vector of size n of class labels, from 0 to K-1
+# Parameters:
+# scores - n x K matrix of scores (output layer values)
+# y - n-dimensional vector of class labels (0 to K-1)
 # K - number of classes
+# Returns:
+# - loss: cross-entropy loss
+# - grad: gradient with respect to scores
+# - error: classification error rate (%)
 loss_grad_scores <- function(y, scores, K){
   n = length(y)
   
@@ -71,15 +81,21 @@ loss_grad_scores <- function(y, scores, K){
   return(list(loss = loss, grad = grad, error = error))
 }
 
-# One pass function
+# Forward and backward pass through the network
 ################################################
-# X - a matrix of size n by p (input)
-# y - a vector of size n of class labels, from 0 to K-1
-# W1 - a p by h matrix of weights
-# b1 - a vector of size h of intercepts
-# W2 - a h by K matrix of weights
-# b2 - a vector of size K of intercepts
-# lambda - a non-negative scalar, ridge parameter for gradient calculations
+# Parameters:
+# X - n x p matrix of input features
+# y - n-dimensional vector of class labels (0 to K-1)
+# W1 - p x hidden_p matrix of first layer weights
+# b1 - hidden_p-dimensional vector of first layer biases
+# W2 - hidden_p x K matrix of second layer weights
+# b2 - K-dimensional vector of second layer biases
+# lambda - L2 regularization parameter
+#
+# Returns:
+# - loss: total loss (cross-entropy + regularization)
+# - error: classification error rate (%)
+# - grads: list containing gradients for W1, b1, W2, b2
 one_pass <- function(X, y, K, W1, b1, W2, b2, lambda) {
   # Parameters:
   #   X: Input data matrix (n_samples x n_features)
@@ -140,14 +156,15 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda) {
               grads = list(dW1 = dW1, db1 = db1, dW2 = dW2, db2 = db2)))
 }
 
-# Function to evaluate validation set error
+# Evaluate model performance on validation set
 ####################################################
-# Xval - a matrix of size nval by p (input)
-# yval - a vector of size nval of class labels, from 0 to K-1
-# W1 - a p by h matrix of weights
-# b1 - a vector of size h of intercepts
-# W2 - a h by K matrix of weights
-# b2 - a vector of size K of intercepts
+# Parameters:
+# Xval - nval x p matrix of validation features
+# yval - nval-dimensional vector of validation labels (0 to K-1)
+# W1, b1, W2, b2 - model parameters
+#
+# Returns:
+# - error: classification error rate (%) on validation set
 evaluate_error <- function(Xval, yval, W1, b1, W2, b2) {
   # Forward pass through the network
   # -------------------------------
@@ -168,20 +185,25 @@ evaluate_error <- function(Xval, yval, W1, b1, W2, b2) {
   return(error)
 }
 
-
-# Full training
+# Train neural network using mini-batch SGD
 ################################################
-# X - n by p training data
-# y - a vector of size n of class labels, from 0 to K-1
-# Xval - nval by p validation data
-# yval - a vector of size nval of of class labels, from 0 to K-1, for validation data
-# lambda - a non-negative scalar corresponding to ridge parameter
-# rate - learning rate for gradient descent
-# mbatch - size of the batch for SGD
-# nEpoch - total number of epochs for training
-# hidden_p - size of hidden layer
-# scale - a scalar for weights initialization
-# seed - for reproducibility of SGD and initialization
+# Parameters:
+# X - n x p matrix of training features
+# y - n-dimensional vector of training labels (0 to K-1)
+# Xval - nval x p matrix of validation features
+# yval - nval-dimensional vector of validation labels
+# lambda - L2 regularization parameter (default: 0.01)
+# rate - learning rate for SGD (default: 0.01)
+# mbatch - mini-batch size (default: 20)
+# nEpoch - number of training epochs (default: 100)
+# hidden_p - number of hidden layer neurons (default: 20)
+# scale - weight initialization scale (default: 1e-3)
+# seed - random seed for reproducibility (default: 12345)
+#
+# Returns:
+# - error: vector of training errors for each epoch
+# - error_val: vector of validation errors for each epoch
+# - params: list containing final model parameters (W1, b1, W2, b2)
 NN_train <- function(X, y, Xval, yval, lambda = 0.01,
                      rate = 0.01, mbatch = 20, nEpoch = 100,
                      hidden_p = 20, scale = 1e-3, seed = 12345){
