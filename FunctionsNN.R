@@ -184,13 +184,35 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda) {
 
 # Evaluate model performance on validation set
 ####################################################
+# Purpose: Calculate classification error rate on validation dataset using
+#          the trained neural network model parameters
+#
 # Parameters:
-# Xval - nval x p matrix of validation features
-# yval - nval-dimensional vector of validation labels (0 to K-1)
-# W1, b1, W2, b2 - model parameters
+#   Xval - nval x p matrix of validation features
+#          nval: number of validation samples
+#          p: number of input features
+#   yval - nval-dimensional vector of validation labels (0 to K-1)
+#          K: number of classes
+#   W1 - p x hidden_p matrix of first layer weights
+#   b1 - hidden_p-dimensional vector of first layer biases
+#   W2 - hidden_p x K matrix of second layer weights
+#   b2 - K-dimensional vector of second layer biases
+#
+# Technical Details:
+#   1. Performs forward pass through the network:
+#      - First layer with ReLU activation
+#      - Second layer producing final scores
+#   2. Uses matrix operations for efficient computation
+#   3. Converts scores to predictions using argmax
+#   4. Calculates error rate as percentage of misclassifications
 #
 # Returns:
-# - error: classification error rate (%) on validation set
+#   error - Float, classification error rate (%) on validation set
+#           calculated as: (number of incorrect predictions / total samples) * 100
+#
+# Example:
+#   val_error <- evaluate_error(X_validation, y_validation, W1, b1, W2, b2)
+#   print(paste("Validation error:", val_error, "%"))
 evaluate_error <- function(Xval, yval, W1, b1, W2, b2) {
   # Forward pass through the network
   # -------------------------------
@@ -213,23 +235,59 @@ evaluate_error <- function(Xval, yval, W1, b1, W2, b2) {
 
 # Train neural network using mini-batch SGD
 ################################################
-# Parameters:
-# X - n x p matrix of training features
-# y - n-dimensional vector of training labels (0 to K-1)
-# Xval - nval x p matrix of validation features
-# yval - nval-dimensional vector of validation labels
-# lambda - L2 regularization parameter (default: 0.01)
-# rate - learning rate for SGD (default: 0.01)
-# mbatch - mini-batch size (default: 20)
-# nEpoch - number of training epochs (default: 100)
-# hidden_p - number of hidden layer neurons (default: 20)
-# scale - weight initialization scale (default: 1e-3)
-# seed - random seed for reproducibility (default: 12345)
+# Purpose: Train a two-layer neural network for multi-class classification
+#          using mini-batch stochastic gradient descent
 #
-# Returns:
-# - error: vector of training errors for each epoch
-# - error_val: vector of validation errors for each epoch
-# - params: list containing final model parameters (W1, b1, W2, b2)
+# Parameters:
+#   X - n x p matrix of training features
+#       n: number of training samples
+#       p: number of input features
+#   y - n-dimensional vector of training labels (0 to K-1)
+#       K: number of classes
+#   Xval - nval x p matrix of validation features
+#   yval - nval-dimensional vector of validation labels
+#   lambda - L2 regularization parameter (default: 0.01)
+#           Controls the strength of weight regularization
+#   rate - learning rate for SGD (default: 0.01)
+#          Controls the step size during optimization
+#   mbatch - mini-batch size (default: 20)
+#            Number of samples per gradient update
+#   nEpoch - number of training epochs (default: 100)
+#            One epoch is a complete pass through the training data
+#   hidden_p - number of hidden layer neurons (default: 20)
+#              Controls model capacity
+#   scale - weight initialization scale (default: 1e-3)
+#           Standard deviation for random weight initialization
+#   seed - random seed for reproducibility (default: 12345)
+#
+# Technical Details:
+#   1. Initialization:
+#      - Weights are initialized using normal distribution
+#      - Biases are initialized to zero
+#   2. Training Process:
+#      - Data is randomly shuffled into mini-batches each epoch
+#      - Forward pass computes predictions
+#      - Backward pass computes gradients
+#      - Parameters are updated using SGD
+#   3. Monitoring:
+#      - Training error is averaged across batches
+#      - Validation error is computed after each epoch
+#
+# Returns: List containing
+#   - error: Vector of length nEpoch with training errors
+#   - error_val: Vector of length nEpoch with validation errors
+#   - params: List of final model parameters
+#     * W1: First layer weights
+#     * b1: First layer biases
+#     * W2: Second layer weights
+#     * b2: Second layer biases
+#
+# Example:
+#   model <- NN_train(X_train, y_train, X_val, y_val,
+#                     lambda = 0.01, rate = 0.01,
+#                     mbatch = 32, nEpoch = 100)
+#   plot(1:100, model$error, type = "l",
+#        xlab = "Epoch", ylab = "Error Rate")
 NN_train <- function(X, y, Xval, yval, lambda = 0.01,
                      rate = 0.01, mbatch = 20, nEpoch = 100,
                      hidden_p = 20, scale = 1e-3, seed = 12345){
