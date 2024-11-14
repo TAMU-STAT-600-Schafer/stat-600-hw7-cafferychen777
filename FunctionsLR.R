@@ -1,21 +1,24 @@
-# Function that implements multi-class logistic regression.
+# Multi-class Logistic Regression implementation using gradient descent
 #############################################################
-# Description of supplied parameters:
-# X - n x p training data, 1st column should be 1s to account for intercept
-# y - a vector of size n of class labels, from 0 to K-1
-# Xt - ntest x p testing data, 1st column should be 1s to account for intercept
-# yt - a vector of size ntest of test class labels, from 0 to K-1
-# numIter - number of FIXED iterations of the algorithm, default value is 50
-# eta - learning rate, default value is 0.1
-# lambda - ridge parameter, default value is 1
-# beta_init - (optional) initial starting values of beta for the algorithm, should be p x K matrix 
+# Input Parameters:
+# X - n x p training data matrix, where:
+#     - n is the number of observations
+#     - p is the number of features (including intercept)
+#     - First column must be 1s for intercept term
+# y - n-dimensional vector of class labels (0 to K-1)
+# Xt - ntest x p testing data matrix (same format as X)
+# yt - ntest-dimensional vector of test class labels (0 to K-1)
+# numIter - number of gradient descent iterations (default: 50)
+# eta - learning rate for gradient descent (default: 0.1)
+# lambda - L2 regularization parameter (default: 1)
+# beta_init - optional initial coefficient matrix (p x K)
 
-## Return output
-##########################################################################
-# beta - p x K matrix of estimated beta values after numIter iterations
-# error_train - (numIter + 1) length vector of training error % at each iteration (+ starting value)
-# error_test - (numIter + 1) length vector of testing error % at each iteration (+ starting value)
-# objective - (numIter + 1) length vector of objective values of the function that we are minimizing at each iteration (+ starting value)
+# Return Values:
+# beta - p x K matrix of fitted coefficients
+# error_train - vector of training error rates (%) for each iteration
+# error_test - vector of testing error rates (%) for each iteration
+# objective - vector of objective function values (NLL + ridge penalty)
+
 LRMultiClass <- function(X, y, Xt, yt, numIter = 50, eta = 0.1, lambda = 1, beta_init = NULL) {
   # Get dimensions
   n = nrow(X)
@@ -61,30 +64,30 @@ LRMultiClass <- function(X, y, Xt, yt, numIter = 50, eta = 0.1, lambda = 1, beta
   error_test = numeric(numIter + 1)
   objective = numeric(numIter + 1)
   
-  # Helper function to compute probabilities
+  # Helper function to compute class probabilities using softmax
   compute_probs = function(X, beta) {
     scores = X %*% beta
-    scores = scores - apply(scores, 1, max) # For numerical stability
+    scores = scores - apply(scores, 1, max)  # Subtract max for numerical stability
     exp_scores = exp(scores)
-    probs = exp_scores / rowSums(exp_scores)
+    probs = exp_scores / rowSums(exp_scores)  # Softmax transformation
     return(probs)
   }
   
-  # Helper function to compute objective value
+  # Helper function to compute objective value (NLL + ridge penalty)
   compute_objective = function(X, y, beta, lambda) {
     probs = compute_probs(X, beta)
     n = nrow(X)
-    # Negative log likelihood
+    # Negative log likelihood of the correct classes
     nll = -mean(log(probs[cbind(1:n, y + 1)]))
-    # Ridge penalty
+    # L2 regularization term
     ridge = (lambda/2) * sum(beta^2)
     return(nll + ridge)
   }
   
-  # Helper function to compute error rate
+  # Helper function to compute classification error rate (%)
   compute_error = function(X, y, beta) {
     probs = compute_probs(X, beta)
-    predictions = max.col(probs) - 1
+    predictions = max.col(probs) - 1  # Get class with highest probability
     return(mean(predictions != y) * 100)
   }
   
@@ -93,25 +96,25 @@ LRMultiClass <- function(X, y, Xt, yt, numIter = 50, eta = 0.1, lambda = 1, beta
   error_test[1] = compute_error(Xt, yt, beta)
   objective[1] = compute_objective(X, y, beta, lambda)
   
-  # Gradient descent iterations
+  # Main gradient descent loop
   for (iter in 1:numIter) {
-    # Compute probabilities
+    # Step 1: Compute current probabilities
     probs = compute_probs(X, beta)
     
-    # Compute gradient
+    # Step 2: Compute gradient of negative log likelihood
     grad = matrix(0, nrow = p, ncol = K)
     for (k in 0:(K-1)) {
       indicator = (y == k)
       grad[,k+1] = -colMeans(X * (indicator - probs[,k+1]))
     }
     
-    # Add ridge penalty gradient
+    # Step 3: Add gradient of ridge penalty
     grad = grad + lambda * beta
     
-    # Update beta
+    # Step 4: Update coefficients using gradient descent
     beta = beta - eta * grad
     
-    # Store errors and objective
+    # Step 5: Store metrics for current iteration
     error_train[iter + 1] = compute_error(X, y, beta)
     error_test[iter + 1] = compute_error(Xt, yt, beta)
     objective[iter + 1] = compute_objective(X, y, beta, lambda)
