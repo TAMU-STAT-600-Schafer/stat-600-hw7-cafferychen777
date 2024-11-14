@@ -5,13 +5,23 @@
 
 # Initialize weights and biases for neural network
 #####################################################
+# Purpose: Initialize weights and biases for a 2-layer neural network
+# 
 # Parameters:
-# p - dimension of input layer (number of features)
-# hidden_p - dimension of hidden layer (number of neurons)
-# K - number of classes in output layer
-# scale - magnitude for initialization of weights (standard deviation of normal distribution)
-# seed - random seed for reproducibility
+#   p: Integer - Input layer dimension (number of features)
+#   hidden_p: Integer - Hidden layer dimension (number of neurons)
+#   K: Integer - Output layer dimension (number of classes)
+#   scale: Float - Standard deviation for weight initialization (default: 1e-3)
+#   seed: Integer - Random seed for reproducibility (default: 12345)
+#
+# Returns:
+#   List containing:
+#     b1: Vector of length hidden_p - First layer biases
+#     b2: Vector of length K - Second layer biases
+#     W1: Matrix of dim p x hidden_p - First layer weights
+#     W2: Matrix of dim hidden_p x K - Second layer weights
 initialize_bw <- function(p, hidden_p, K, scale = 1e-3, seed = 12345){
+  # Print initialization parameters for debugging
   cat("\nStarting initialize_bw function\n")
   cat("Parameters:\n")
   cat("p:", p, "\n")
@@ -19,24 +29,27 @@ initialize_bw <- function(p, hidden_p, K, scale = 1e-3, seed = 12345){
   cat("K:", K, "\n")
   cat("scale:", scale, "\n")
   
+  # Set random seed for reproducibility
   set.seed(seed)
   
-  # Initialize intercepts as zeros
-  b1 = rep(0, hidden_p)
-  b2 = rep(0, K)
+  # Initialize biases as zeros (common practice in neural networks)
+  b1 = rep(0, hidden_p)  # First layer bias vector
+  b2 = rep(0, K)         # Second layer bias vector
   
   cat("\nInitializing weights\n")
-  # Initialize weights
+  # Initialize weights using small random values from normal distribution
+  # Small initialization helps prevent saturation of neurons
   W1 = matrix(rnorm(p * hidden_p, mean = 0, sd = scale), nrow = p)
   W2 = matrix(rnorm(hidden_p * K, mean = 0, sd = scale), nrow = hidden_p)
   
+  # Verify dimensions of initialized parameters
   cat("\nDimensions check:\n")
   cat("W1:", dim(W1), "\n")
   cat("W2:", dim(W2), "\n")
   cat("b1 length:", length(b1), "\n")
   cat("b2 length:", length(b2), "\n")
   
-  # Verify matrix structure
+  # Print sample values for verification
   cat("\nFirst few values of W1:\n")
   print(W1[1:2, 1:2])
   cat("\nFirst few values of W2:\n")
@@ -49,33 +62,46 @@ initialize_bw <- function(p, hidden_p, K, scale = 1e-3, seed = 12345){
 
 # Calculate loss, error, and gradient based on scores
 #############################################################
+# Purpose: Compute cross-entropy loss, gradients, and classification error
+#          for multi-class classification using softmax
+#
 # Parameters:
-# scores - n x K matrix of scores (output layer values)
-# y - n-dimensional vector of class labels (0 to K-1)
-# K - number of classes
-# Returns:
-# - loss: cross-entropy loss
-# - grad: gradient with respect to scores
-# - error: classification error rate (%)
+#   scores - n x K matrix of scores (output layer values before softmax)
+#   y - n-dimensional vector of class labels (0 to K-1)
+#   K - number of classes
+#
+# Technical Details:
+#   1. Softmax computation includes numerical stability adjustment
+#   2. Cross-entropy loss is averaged over all samples
+#   3. Gradients are computed for backpropagation
+#   4. Error rate is percentage of misclassifications
+#
+# Returns: List containing
+#   - loss: Float - Cross-entropy loss (averaged over samples)
+#   - grad: Matrix - Gradients with respect to scores (n x K)
+#   - error: Float - Classification error rate (%)
 loss_grad_scores <- function(y, scores, K){
   n = length(y)
   
-  # Compute softmax probabilities
-  scores_shifted = scores - apply(scores, 1, max) # For numerical stability
+  # Compute softmax probabilities with numerical stability
+  # Subtract max score to prevent overflow in exp()
+  scores_shifted = scores - apply(scores, 1, max)
   exp_scores = exp(scores_shifted)
   probs = exp_scores / rowSums(exp_scores)
   
-  # Compute loss
-  correct_logprobs = -log(probs[cbind(1:n, y + 1)])  # +1 for R indexing
+  # Compute cross-entropy loss
+  # Add 1 to y for R's 1-based indexing
+  correct_logprobs = -log(probs[cbind(1:n, y + 1)])
   loss = mean(correct_logprobs)
   
-  # Compute gradient
+  # Compute gradient for backpropagation
+  # grad = softmax - one_hot_encoded_labels
   grad = probs
   grad[cbind(1:n, y + 1)] = grad[cbind(1:n, y + 1)] - 1
-  grad = grad / n
+  grad = grad / n  # Average over samples
   
-  # Compute error rate
-  predictions = max.col(scores) - 1  # -1 to match 0-based class labels
+  # Compute classification error rate
+  predictions = max.col(scores) - 1  # Convert to 0-based class labels
   error = mean(predictions != y) * 100
   
   return(list(loss = loss, grad = grad, error = error))
