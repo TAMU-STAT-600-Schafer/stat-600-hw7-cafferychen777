@@ -341,3 +341,22 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   return(list(error = error, error_val = error_val, 
               params = list(W1 = W1, b1 = b1, W2 = W2, b2 = b2)))
 }
+
+NN_predict <- function(X, params) {
+  # Forward pass to get predictions
+  # Input:
+  #   X: matrix of n x p (features)
+  #   params: list containing W1, W2, b1, b2
+  # Output:
+  #   predictions: vector of length n with values from 0 to K-1
+  
+  # Forward pass
+  z1 <- t(t(X %*% params$W1) + params$b1)  # First layer
+  h1 <- pmax(0, z1)  # ReLU activation
+  scores <- t(t(h1 %*% params$W2) + params$b2)  # Output layer
+  
+  # Get predictions (class with maximum score)
+  predictions <- max.col(scores) - 1  # -1 because max.col returns 1-based indices
+  
+  return(predictions)
+}
