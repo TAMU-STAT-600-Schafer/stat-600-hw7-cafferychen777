@@ -42,9 +42,9 @@ test_loss_grad <- function() {
   # Check dimensions
   stopifnot(dim(result$grad) == c(n, K))
   
-  # 放宽误差范围或重新计算预期损失值
-  expected_loss <- result$loss  # 先运行一次获取实际值
-  cat("Actual loss value:", expected_loss, "\n")  # 打印实际损失值以便调整
+  # Relax error tolerance or recalculate expected loss value
+  expected_loss <- result$loss  # Run once to get actual value
+  cat("Actual loss value:", expected_loss, "\n")  # Print actual loss value for adjustment
   stopifnot(abs(result$loss - expected_loss) < 1e-5)
   
   cat("Loss and gradient test passed\n")
@@ -73,7 +73,7 @@ test_simple_training <- function() {
   cat("Simple training test passed\n")
 }
 
-# Test 4: Two normal populations test (改进)
+# Test 4: Two normal populations test (improved)
 test_two_populations <- function() {
   # Create two well-separated normal distributions
   set.seed(42)
@@ -91,7 +91,7 @@ test_two_populations <- function() {
   
   # Check separation of populations
   final_error <- out$error[length(out$error)]
-  stopifnot(final_error < 10) # 对于良好分离的数据，错误率应该很低
+  stopifnot(final_error < 10) # Error rate should be low for well-separated data
   
   cat("Two populations test passed\n")
 }
